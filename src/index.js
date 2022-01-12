@@ -1,3 +1,3 @@
-import loadHomepage from './js/ui.js'
+import {loadHomepage} from './js/ui.js'
 
 document.addEventListener('DOMContentLoaded', loadHomepage())

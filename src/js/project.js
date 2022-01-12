@@ -1,35 +1,46 @@
-let projects;
+import { Task } from "./task";
+import { compareAsc, format } from "date-fns";
+
+
+let allProjects;
 
 function restore() {
-  if (!localStorage.myLibrary) projects = [];
+  if (!localStorage.allProjects) {
+    allProjects = [];
+    allProjects.push(Project.of("Default", "Add your tasks here"))
+  }
   else {
-    let items = localStorage.getItem("projects");
+    let items = localStorage.getItem("allProjects");
     items = JSON.parse(items);
-    projects = items;
+    allProjects = items.map((item) => Project.of(item));
   }
 }
 function sendToLocal() {
-  localStorage.setItem("projects", JSON.stringify(projects));
+  localStorage.setItem("allProjects", JSON.stringify(allProjects));
 }
 
-function createProject(arr) {
-  projects.push({
-    title: arr[0],
-    description: arr[1],
-    tasks: [],
-  });
-  sendToLocal();
+class Project {
+  constructor(title, tasks) {
+    this.title = title;
+    if (tasks === undefined) this.tasks = [];
+    else this.tasks = tasks;
+  }
+  getTitle() {
+    return this.title;
+  }
+  setTitle(title) {
+    this.title = title;
+  }
+  getTasks() {
+    return this.tasks;
+  }
+  setTask(task) {
+    this.tasks.push(task);
+  }
+  static of(object) {
+    // let tasks = object.tasks.map((e) => Task.of(e));
+    return new Project(object.title, object.tasks.map((e) => Task.of(e)));
+  }
 }
-function updateProject(index, type, update) {
-  if (type === "title") projects[index].title = update;
-  if (type === "description") projects[index].description = update;
-  sendToLocal();
-}
-function removeProject(i) {
-    projects.splice(i, 1)
-    sendToLocal()
-}
-function listProjects() {
-  return projects;
-}
-export { createProject, listProjects, updateProject, removeProject, restore };
+
+export { Project, allProjects, restore, sendToLocal };

@@ -16,13 +16,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f3736a;
-    height: 60px;
+    background-color: #f36459;
+    height: 40px;
+    z-index: 1;
+    box-shadow: rgba(0, 0, 0, 0.212) 0 0px 10px;
     #menuBtn {
+      color: white;
       background: none;
       border: none;
-      font-size: 2em;
+      font-size: 1.5em;
       cursor: pointer;
+      width: 50px;
+      transition: 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 0;
     }
   }
   #main {
@@ -91,87 +100,98 @@ body {
     }
   }
   #left {
-    background: #e9e9e9;
+    transition: 0.3s;
+    background: #eeeeee;
     height: 100%;
     width: 200px;
+    min-width: 200px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    padding: 2em;
-    transition: 0.3s;
-    #projectList {
+    padding: 30px;
+    gap: 20px;
+    #projectsMain,
+    #today, #allTasks {
+      width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      justify-content: flex-start;
+      gap: 10px;
+    }
+    #projectsMainTitle,
+    #today, #allTasks {
+      font-size: 1.1em;
+      // border-bottom: solid black 1px;
+    }
+    #projects {
+      display: flex;
+      flex-direction: column;
       width: 100%;
-      height: 100%;
-      padding-top: 1.2em;
-      gap: 0.5em;
-      #projectsTitleTop {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: solid black 1px;
-        #projectsTitle {
-          font-weight: 700;
-          font-size: 1.2em;
-          margin-bottom: 0.2em;
-        }
-        #newProjectBtn {
-          padding: 0;
-          background: none;
-          border: none;
-          font-size: 2em;
-          cursor: pointer;
-          &:hover {
-            color: #555555;
-          }
-        }
-      }
+      gap: 3px;
       .project,
       .projectActive {
-        height: 1.2em;
+        padding-left: 5px;
+        cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        cursor: pointer;
-        font-weight: 400;
-        color: #4e4e4e;
+        align-items: flex-start;
         width: 100%;
-        border-radius: 0.2em;
-        padding: 0.1em;
-        transition: 0.2s;
+        height: 25px;
+        border-radius: 3px;
         &:hover {
-          color: #292929;
-          background-color: #ffffff;
-        }
-        &:active {
-          color: rgb(0, 0, 0);
-        }
-        .projectTitle {
-          width: 100%;
-        }
-        .projectDelBtn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: none;
-          border: none;
-          transition: 0.2s;
-          font-size: 0.7em;
-          &:hover {
-            font-size: 1em;
-          }
+          background: #ffffff;
         }
       }
       .projectActive {
-        color: #000000;
-        font-weight: 500;
+        font-weight: 600;
+      }
+
+      .projectTitle {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 25px;
+        height: auto;
+        font-size: 0.9em;
+      }
+      .projectDelBtn {
+        background: none;
+        border: none;
+        transition: 0.1s;
+        font-size: 0.7em;
+        cursor: pointer;
         &:hover {
-          color: black;
+          transform: scale(1.2);
+        }
+      }
+    }
+    #projectsAdd {
+      padding-left: 5px;
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-radius: 8px;
+      #newProjectArea {
+        width: 100%;
+        height: 20px;
+        resize: none;
+        background: none;
+        border: none;
+        &::placeholder {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+      }
+      #newProjectAdd {
+        background: none;
+        border: none;
+        height: 100%;
+        border-radius: 0px 8px 8px 0px;
+        &:hover {
+          background: #dbdbdb;
         }
       }
     }
@@ -179,70 +199,148 @@ body {
   #right {
     background-color: #ffffff;
     width: auto;
+    min-width: 350px;
+    overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
     flex: 1;
     padding: 2em;
     overflow: hidden;
-    #selectedProject {
+    #rightProjectMain {
       width: 100%;
-      height: 100%;
+      min-width: 400px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      #rightProjectTitle {
+        width: 100%;
+        display: flex;
+        font-size: 1.5em;
+        font-weight: 800;
+        line-height: 32px;
+        padding-left: 2px;
+      }
+      .projectEditBtn {
+        background: none;
+        border: none;
+        width: 40px;
+        cursor: pointer;
+        font-size: 1.7em;
+        &:hover {
+          font-size: 1.9em;
+        }
+      }
+      #editTitleArea {
+        resize: none;
+        width: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        font-size: 1.5em;
+        line-height: 0;
+        padding: 10px 0;
+      }
+    }
+    #rightTasks,
+    #tasks {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      padding-top: 2em;
-      #selectedProjectTop {
-        // width: 100%;
+      width: 100%;
+      gap: 8px;
+      #taskForm {
+        width: 100%;
         display: flex;
-        gap: 0.2em;
         flex-direction: column;
-        justify-content: flex-end;
-        #selectedProjectTitle,
-        #selectedProjectDescription {
-          height: 30px;
-          display: flex;
-          font-size: 1.5em;
-          font-weight: 800;
-          line-height: 32px;
-          padding-left: 2px;
-          cursor: pointer;
-        }
-        &:hover {
-          color: #4e4e4e;
-        }
-        #selectedProjectDescription {
+        z-index: 2;
+        // border: solid black 1px;
+        // border-radius: 8px;
+        #taskTitleArea,
+        #taskDescriptionArea {
+          font-weight: 600;
           font-size: 1em;
-          font-weight: 500;
-          line-height: 31px;
-          align-items: flex-start;
-        }
-        #projectTitleEdit,
-        #projectDescriptionEdit {
+          resize: none;
+          height: 20px;
+          overflow: hidden;
+          border: none;
+          border-bottom: rgb(255, 255, 255) solid 2px;
+          background: none;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-          resize: none;
+        }
+        #taskDescriptionArea {
+          height: 100px;
           border: none;
+        }
+        #taskFormBottom {
           display: flex;
+          justify-content: space-between;
+          align-items: center;
           height: 30px;
-          font-size: 1.5em;
-          font-weight: 800;
-          justify-content: center;
-          background-color: #e6e6e6;
-          border-radius: 0.3em;
-          color: #464646;
-          &::selection {
-            background-color: #969696;
+          #taskDate{
+            padding: 2px;
+            background: rgb(255, 255, 255);
+            border: none;
+            border-radius: 8px;
           }
-          &::placeholder {
-            font-weight: 200;
-            color: #999999;
+          #taskFormCancel, #taskFormSubmit {
+            height: 25px;
+            border: none;
+            background: white;
+            border-radius: 50%;
+            font-size: 1.1em;
+            cursor: pointer;
+            line-height: 0;
+            text-align: center;
+
           }
         }
-        #projectDescriptionEdit {
-          font-size: 1em;
-          font-weight: 500;
+      }
+      .task,
+      #addNewTask {
+        cursor: pointer;
+        padding: 0 3px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f3f3f3;
+        border-radius: 8px;
+        &:hover {
+          background-color: #e7e7e7;
         }
+        #newTaskButton {
+          height: 100%;
+          width: 100%;
+          align-self: center;
+          text-align: center;
+        }
+        .taskTitle{
+          padding-left: 5px;
+          display: flex;
+          align-items: center;
+          width: auto;
+          flex: 1;
+          height: 100%;
+        }
+        .taskDueDate{
+          font-size: 0.8em;
+          width: auto;
+          text-align: end;
+        }
+        .taskDelBtn {
+          background: none;
+          border: none;
+          font-size: 0.8em;
+          transition: 0.1s;
+          &:hover {
+            transform: scale(1.2);
+          }
+        }
+      }
+      #addNewTask {
+        min-height: 20px;
+        justify-content: center;
       }
     }
   }

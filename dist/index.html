@@ -1,13 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ToDo</title>
     <script src="./main.js" defer></script>
-</head>
-<body>
-    <div id="content"></div>
-</body>
+  </head>
+  <body>
+    <div id="content">
+      <header id="header">
+        <div id="headerLeft">
+          <button id="menuBtn">☰</button>
+        </div>
+        <div id="headerRight"></div>
+      </header>
+      <div id="main">
+        <div id="left">
+          <div id="allTasks">🗄️&nbspAll your tasks</div>
+          <div id="today">📅 &nbspToday</div>
+          <div id="projectsMain">
+            <span id="projectsMainTitle">📋 &nbspProjects</span>
+            <div id="projects"></div>
+            <div id="projectsAdd">
+              <textarea
+                id="newProjectArea"
+                placeholder="New project"
+                maxlength="50"
+              ></textarea>
+              <button id="newProjectAdd">+</button>
+            </div>
+          </div>
+        </div>
+        <div id="right">
+          <div id="rightProjectMain">
+            <button id="rightProjectEdit">Edit</button>
+            <div id="rightProjectTitle">Placeholder</div>
+          </div>
+          <div id="rightTasks">
+            <div id="tasks"></div>
+            <div id="addNewTask">
+              <div id="newTaskButton">Click to add new task</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

@@ -1,173 +1,305 @@
 import { createDom } from "./dom";
-import {
-  createProject,
-  listProjects,
-  updateProject,
-  removeProject,
-  restore,
-} from "./project";
+import { createForm, removeForm } from "./form";
+import { Project, allProjects, restore, sendToLocal } from "./project";
+import { Task } from "./task";
+import { compareAsc, differenceInDays, format } from "date-fns";
+
 import "../styles/ui.scss";
-import createHeader from "./header";
-
+let selectedProjectIndex;
+let editStatus;
 function loadHomepage() {
-  createHeader();
-  content.appendChild(createDom("div", "main"));
-  main.appendChild(createDom("div", "left"));
-  main.appendChild(createDom("div", "right"));
   restore();
-  renderProjectLeft();
+  reloadProjects();
+  newTaskListener();
+  renderProjectRight(0);
+  toggleProjectClass(0);
 }
+//reloads allProjects from project.js
+function reloadProjects() {
+  projects.innerHTML = "";
+  allProjects.forEach((e, i) => {
+    renderProjectLeft(i);
+  });
+}
+//listeners for new project button
+(function newProjectListeners() {
+  newProjectAdd.addEventListener("click", () => {
+    if (newProjectArea.value === "") return;
+    allProjects.push(new Project(newProjectArea.value));
+    renderProjectLeft(allProjects.length - 1);
+    newProjectArea.value = "";
+    sendToLocal();
+  });
+  newProjectArea.addEventListener("keydown", (e) => {
+    if (newProjectArea.value === "" && e.code === "Enter")
+      return e.preventDefault();
+    if (e.code === "Enter") {
+      e.preventDefault();
+      allProjects.push(new Project(newProjectArea.value));
+      renderProjectLeft(allProjects.length - 1);
+      newProjectArea.value = "";
+      sendToLocal();
+    }
+  });
+})();
+//make side menu interractive
+(function menuBtnListener() {
+  let leftState = true;
+  menuBtn.addEventListener("click", toggleLeft);
 
-function renderProjectLeft() {
-  //creates project list
-  (function createProjectList() {
-    // create projectList div and Description
-    left.appendChild(createDom("div", "projectList"));
-    projectList.appendChild(createDom("div", "projectsTitleTop"));
-    projectsTitleTop.appendChild(createDom("span", "projectsTitle"));
-    projectsTitle.textContent = "Projects";
+  function toggleLeft() {
+    if (leftState === true) {
+      leftState = false;
+      left.style.minWidth = "0";
+      left.style.width = "0";
+      left.style.padding = "30px 0";
+      left.style.transform = "translateX(-150px)";
+      menuBtn.style.transform = "scaleX(-1)";
 
-    projectsTitleTop.appendChild(createDom("button", "newProjectBtn"));
-    newProjectBtn.textContent = "+";
+      return;
+    }
+    if (leftState === false) {
+      leftState = true;
+      left.style.minWidth = "200px";
+      left.style.width = "200px";
+      left.style.padding = "30px";
+      left.style.transform = "none";
+      menuBtn.style.transform = "scaleX(1)";
 
-    //create form on button click
-    newProjectBtn.addEventListener("click", () => {
-      createForm();
-      form.innerHTML = `
-                <span class="formTitle">NEW PROJECT</span>
-                <label class ="formLabel" for ="projectName">Title*</label>
-                <input require type="text" class = "formText" id="projectName" name ="projectName">
-                <label class ="formLabel" for ="projectDescription">Description</label>
-                <input require type="text" class = "formText" id="projectDescription" name ="projectDescription">
-                <button type="submit" class ="formSubmit" id ="projectSubmit">Submit</button>
-                `;
-      //submit eventlistener
-      projectSubmit.addEventListener("click", (e) => {
-        createProject(returnFormSubmit(e));
-        let projects = listProjects();
-        let index = projects.length - 1;
-        renderProject(index);
-        toggleProject(index);
-      });
-    });
-  })();
-  //creates a project named "default" if no projects saved
-  (function reloadProjects() {
-    let projects = listProjects();
-    if (projects === []) {
-      createProject(["Default", "No Description"]);
-      renderProject(0);
-      renderProjectRight(0);
-    } else {
-      for (let i = 0; i < projects.length; i++) {
-        renderProject(i);
+      return;
+    }
+  }
+})();
+(function allTasksListener() {
+  allTasks.addEventListener("click", () => {
+    renderAllTasks();
+  });
+})();
+//listener for newtask button
+function newTaskListener() {
+  newTaskButton.addEventListener("click", () => {
+    if (editStatus === true) {
+      toggleProjectClass(selectedProjectIndex);
+      editStatus = false;
+      return;
+    }
+    taskForm(addNewTask);
+  });
+}
+function closeTaskForm() {
+  addNewTask.innerHTML = `
+  <div id="newTaskButton">Click to add new task</div>
+  `;
+  newTaskListener();
+}
+function submitTaskForm(container, taskIndex) {
+  let task = allProjects[selectedProjectIndex].tasks[taskIndex];
+  let previousContent = container.innerHTML;
+
+  if (container.id === "addNewTask") {
+    allProjects[selectedProjectIndex].setTask(
+      new Task(taskTitleArea.value, taskDescriptionArea.value, taskDate.value)
+    );
+    let tasks = allProjects[selectedProjectIndex].getTasks();
+    container.innerHTML = previousContent;
+  } else {
+    task.setTitle(taskTitleArea.value);
+    task.setDescription(taskDescriptionArea.value);
+    task.setDate(taskDate.value);
+  }
+  editStatus = false;
+  sendToLocal();
+  closeTaskForm();
+  toggleProjectClass(selectedProjectIndex);
+}
+//creates task form and submit listener
+function taskForm(container, taskIndex) {
+  closeTaskForm();
+  let task = allProjects[selectedProjectIndex].tasks[taskIndex];
+  container.innerHTML = `
+<div id="taskForm">
+<textarea id="taskTitleArea" placeholder="Title"></textarea>
+<textarea id="taskDescriptionArea"placeholder="Description"></textarea>
+<div id="taskFormBottom">
+<input type="date" id="taskDate" value="${format(new Date(), "yyyy-MM-dd")}">
+<div id="formInput">
+<button id="taskFormCancel">✕</button>
+<button id="taskFormSubmit">✓</button>
+</div>
+</div>
+</div>`;
+  //sets values of the selected task to the text areas
+  if (container.id !== "addNewTask") {
+    taskTitleArea.value = task.getTitle();
+    taskDescriptionArea.value = task.getDescription();
+    taskDate.value = task.getDate();
+  }
+  taskFormSubmit.addEventListener("click", () => {
+    submitTaskForm(container, taskIndex);
+  });
+  taskFormCancel.addEventListener("click", () => {
+    editStatus = false;
+    closeTaskForm();
+    toggleProjectClass(selectedProjectIndex);
+  });
+}
+// renders all the projects of the left sidebar
+function renderProjectLeft(index) {
+  let newProject = projects.appendChild(
+    createDom("div", `project${index}`, "project")
+  );
+
+  //project title
+  let newProjectTitle = newProject.appendChild(
+    createDom("div", `project${index}Title`, "projectTitle")
+  );
+  newProjectTitle.addEventListener("click", () => {
+    toggleProjectClass(index);
+    closeTaskForm();
+  });
+  newProjectTitle.textContent = `• ${allProjects[index].title}`;
+
+  //del button + listener
+  let newProjectDelBtn = newProject.appendChild(
+    createDom("button", `project${index}Del`, "projectDelBtn")
+  );
+  newProjectDelBtn.textContent = "🗑";
+  newProjectDelBtn.addEventListener("click", (e) => deleteProject(e, index));
+
+  //delete project and updates local storage
+  function deleteProject(e, index) {
+    allProjects.splice(index, 1);
+    sendToLocal();
+    let target = e.target;
+    target.parentNode.parentNode.removeChild(target.parentNode);
+    reloadProjects();
+  }
+}
+function renderProjectRight(index) {
+  rightProjectMain.innerHTML = "";
+  let editBtn = rightProjectMain.appendChild(
+    createDom("button", `projectEditBtn`, "projectEditBtn")
+  );
+  editBtn.textContent = "✎";
+
+  //edit project title listener
+  editBtn.addEventListener("click", () => {
+    rightProjectMain.removeChild(rightProjectTitle);
+    let editTitleArea = rightProjectMain.appendChild(
+      createDom("textarea", "editTitleArea")
+    );
+    editTitleArea.setAttribute("maxlength", "50");
+    editTitleArea.value = allProjects[index].getTitle();
+    editTitleArea.setAttribute("placeholder", "Project Name");
+    editTitleArea.autofocus = true;
+
+    rightProjectMain.removeChild(editBtn);
+    rightProjectMain.prepend(
+      createDom("button", "projectSaveBtn", "projectEditBtn")
+    );
+    projectSaveBtn.textContent = "✓";
+
+    //edit textarea listener for enter keydown
+    editTitleArea.addEventListener("keydown", (e) => {
+      if (editTitleArea.value === "" && e.code === "Enter")
+        return e.preventDefault();
+      if (e.code === "Enter") {
+        allProjects[index].setTitle(editTitleArea.value);
+        sendToLocal();
+        reloadProjects();
+        renderProjectRight(index);
       }
-      renderProjectRight(0);
-      toggleProject(0);
+    });
+    //save button listener
+    projectSaveBtn.addEventListener("click", (e) => {
+      if (editTitleArea.value === "") return e.preventDefault();
+      allProjects[index].setTitle(editTitleArea.value);
+      sendToLocal();
+      reloadProjects();
+      renderProjectRight(index);
+    });
+  });
+
+  rightProjectMain.appendChild(createDom("span", "rightProjectTitle"));
+  rightProjectTitle.textContent = allProjects[index].title;
+}
+function renderTasks(index, project, today) {
+  let allTasks;
+  if (today === true) allTasks = allProjects[project].getTasks();
+  else allTasks = allProjects[selectedProjectIndex].getTasks();
+  let taskDiv = tasks.appendChild(createDom("div", `task${index}`, "task"));
+  let taskTitle = taskDiv.appendChild(
+    createDom("div", `task${index}Title`, "taskTitle")
+  );
+
+  //listener for task edit
+  taskTitle.textContent = allTasks[index].getTitle();
+  taskTitle.addEventListener("click", (e) => {
+    if (editStatus === true) {
+      toggleProjectClass(selectedProjectIndex);
+      closeTaskForm();
+      editStatus = false;
+      return;
     }
+    taskForm(e.target.parentNode, index);
+    editStatus = true;
+  });
+
+  //creates due date div
+  let dateDiv = taskDiv.appendChild(
+    createDom("div", `task${index}DueDate`, "taskDueDate")
+  );
+  //formats due date
+  (function renderDate() {
+    let date = allTasks[index].getDate();
+    let dueDate = differenceInDays(
+      new Date(date),
+      new Date().setHours(0, 0, 0, 0)
+    );
+    if (dueDate > 730) dateDiv.textContent = `due in 2+ year`;
+    if (dueDate > 365 && dueDate < 730) dateDiv.textContent = `due in 1+ year`;
+    if (dueDate <= 365) dateDiv.textContent = `due in ${dueDate} days`;
+    if (dueDate === 1) dateDiv.textContent = `due tomorrow`;
+    if (dueDate === 0) dateDiv.textContent = `due today`;
   })();
-  //renders the new project on the left
-  function renderProject(i) {
-    let projects = listProjects();
-    projectList.appendChild(createDom("div", `project${i}`, "project"));
+  let delBtn = taskDiv.appendChild(
+    createDom("button", `task${index}DelBtn`, "taskDelBtn")
+  );
 
-    //renders title & delete btn
-    const project = document.getElementById(`project${i}`);
-    project.appendChild(createDom("div", `projectTitle${i}`, "projectTitle"));
-    project.appendChild(
-      createDom("button", `projectDelBtn${i}`, "projectDelBtn")
-    ).textContent = "🗑️";
+  //del btn listener
+  delBtn.textContent = "🗑";
+  delBtn.addEventListener("click", () => {
+    allProjects[selectedProjectIndex].tasks.splice(index, 1);
+    sendToLocal();
+    toggleProjectClass(selectedProjectIndex);
+  });
+}
+//changes the class of selected project and stores index
+function toggleProjectClass(index) {
+  selectedProjectIndex = index;
+  document.querySelectorAll(".projectActive").forEach((e) => {
+    e.className = "project";
+  });
+  document.getElementById(`project${index}`).className = "projectActive";
+  renderProjectRight(index);
+  tasks.innerHTML = "";
+  let allTasks = allProjects[index].getTasks();
+  allTasks.forEach((e, i) => {
+    renderTasks(i);
+  });
+}
 
-    //listener for project selection & del btn
-    const projectTitle = document.getElementById(`projectTitle${i}`);
-    projectTitle.addEventListener("click", () => {
-      toggleProject(i);
+function renderAllTasks() {
+  rightProjectMain.innerHTML = `
+  <span id="rightProjectTitle">All tasks</span>
+  `;
+
+  tasks.innerHTML = ``;
+  allProjects.forEach((e, projectIndex) => {
+    let tasks = e.getTasks();
+    tasks.forEach((task, i) => {
+      renderTasks(i, projectIndex, true);
     });
-    document
-      .getElementById(`projectDelBtn${i}`)
-      .addEventListener("click", () => {
-        removeProjectLeft(i);
-        toggleProject(i - 1);
-      });
-
-    projectTitle.textContent = `• ${projects[i].title}`;
-  }
-
-  function toggleProject(i) {
-    toggleProjectClass();
-    let project = document.getElementById(`project${i}`);
-    project.className = "projectActive";
-    removeProjectRight();
-    renderProjectRight(i);
-    function toggleProjectClass() {
-      document.querySelectorAll(".projectActive").forEach((e) => {
-        e.className = "project";
-      });
-    }
-  }
+  });
 }
-function removeProjectLeft(i) {
-  let project = document.getElementById(`project${i}`);
-  projectList.removeChild(project);
-  removeProject(i);
-}
-function renderProjectRight(i) {
-  let projects = listProjects();
-  right.appendChild(createDom("div", "selectedProject"));
-
-  //renders top part of the project
-  createSelectedProjectTop();
-  function createSelectedProjectTop() {
-    selectedProject.innerHTML = "";
-    selectedProject.appendChild(createDom("div", "selectedProjectTop"));
-
-    selectedProjectTop.appendChild(
-      createDom("span", "selectedProjectTitle")
-    ).textContent = projects[i].title;
-
-    selectedProjectTop.appendChild(
-      createDom("span", "selectedProjectDescription")
-    ).textContent = projects[i].description;
-
-    //listeners for opening edit
-    selectedProjectTitle.addEventListener("click", projectTopEdit);
-    selectedProjectDescription.addEventListener("click", projectTopEdit);
-  }
-  function projectTopEdit() {
-    selectedProjectTop.innerHTML = `
-    <textarea id="projectTitleEdit" name ="projectTitleEdit" placeHolder="Title">${selectedProjectTitle.textContent}</textarea>
-    <textarea id="projectDescriptionEdit" name ="projectDescriptionEdit" placeHolder="Description">${selectedProjectDescription.textContent}</textarea>
-    <button id="projectEditConfirm">Confirm</button>
-    `;
-    projectEditConfirm.addEventListener("click", () => {
-      let project = document.getElementById(`project${i}`);
-      updateProject(i, "title", projectTitleEdit.value);
-      updateProject(i, "description", projectDescriptionEdit.value);
-      project.textContent = `• ${projectTitleEdit.value}`;
-      createSelectedProjectTop();
-    });
-  }
-}
-function removeProjectRight() {
-  right.removeChild(selectedProject);
-}
-
-//form functions
-function returnFormSubmit(e) {
-  e.preventDefault();
-  let arr = [];
-  arr.push(projectName.value);
-  arr.push(projectDescription.value);
-  removeForm();
-  return arr;
-}
-function createForm() {
-  content.prepend(createDom("div", "formBg"));
-  formBg.addEventListener("click", removeForm);
-  content.prepend(createDom("form", "form"));
-}
-function removeForm() {
-  content.removeChild(formBg);
-  content.removeChild(form);
-}
-export default loadHomepage;
+export { loadHomepage };
