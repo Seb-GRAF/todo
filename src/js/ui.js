@@ -73,6 +73,29 @@ function reloadProjects() {
 (function allTasksListener() {
   allTasks.addEventListener("click", () => {
     renderAllTasks();
+    addNewTask.style.display = "none";
+
+    //untoggles seleced project
+    document.querySelectorAll(".projectActive").forEach((e) => {
+      e.className = "project";
+    });
+    // styles today and allprojects
+    allTasks.style.fontWeight = "600";
+    today.style.fontWeight = "400";
+  });
+})();
+(function todayTasksListener() {
+  today.addEventListener("click", () => {
+    renderToday();
+    addNewTask.style.display = "none";
+
+    //untoggles seleced project
+    document.querySelectorAll(".projectActive").forEach((e) => {
+      e.className = "project";
+    });
+    // styles today and allprojects
+    today.style.fontWeight = "600";
+    allTasks.style.fontWeight = "400";
   });
 })();
 //listener for newtask button
@@ -86,6 +109,7 @@ function newTaskListener() {
     taskForm(addNewTask);
   });
 }
+
 function closeTaskForm() {
   addNewTask.innerHTML = `
   <div id="newTaskButton">Click to add new task</div>
@@ -142,6 +166,13 @@ function taskForm(container, taskIndex) {
     closeTaskForm();
     toggleProjectClass(selectedProjectIndex);
   });
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Escape") {
+      editStatus = false;
+      closeTaskForm();
+      toggleProjectClass(selectedProjectIndex);
+    }
+  });
 }
 // renders all the projects of the left sidebar
 function renderProjectLeft(index) {
@@ -149,13 +180,14 @@ function renderProjectLeft(index) {
     createDom("div", `project${index}`, "project")
   );
 
-  //project title
+  //project click listener
   let newProjectTitle = newProject.appendChild(
     createDom("div", `project${index}Title`, "projectTitle")
   );
   newProjectTitle.addEventListener("click", () => {
     toggleProjectClass(index);
     closeTaskForm();
+    addNewTask.style.display = "flex";
   });
   newProjectTitle.textContent = `• ${allProjects[index].title}`;
 
@@ -253,14 +285,16 @@ function renderTasks(index, project, today) {
   (function renderDate() {
     let date = allTasks[index].getDate();
     let dueDate = differenceInDays(
-      new Date(date),
+      new Date(date).setHours(0, 0, 0, 0),
       new Date().setHours(0, 0, 0, 0)
     );
-    if (dueDate > 730) dateDiv.textContent = `due in 2+ year`;
-    if (dueDate > 365 && dueDate < 730) dateDiv.textContent = `due in 1+ year`;
-    if (dueDate <= 365) dateDiv.textContent = `due in ${dueDate} days`;
+    let formatedDate = format(new Date(date), "dd MMMM yyyy");
+
+    if (dueDate > 31) dateDiv.textContent = `due on ${formatedDate}`;
+    if (dueDate <= 31) dateDiv.textContent = `due in ${dueDate} days`;
     if (dueDate === 1) dateDiv.textContent = `due tomorrow`;
     if (dueDate === 0) dateDiv.textContent = `due today`;
+    if (dueDate < 0) dateDiv.textContent = `overdue by ${dueDate * -1} day`;
   })();
   let delBtn = taskDiv.appendChild(
     createDom("button", `task${index}DelBtn`, "taskDelBtn")
@@ -276,6 +310,10 @@ function renderTasks(index, project, today) {
 }
 //changes the class of selected project and stores index
 function toggleProjectClass(index) {
+  // styles today and allprojects
+  document.getElementById("allTasks").style.fontWeight = "400";
+  document.getElementById("today").style.fontWeight = "400";
+
   selectedProjectIndex = index;
   document.querySelectorAll(".projectActive").forEach((e) => {
     e.className = "project";
@@ -299,6 +337,19 @@ function renderAllTasks() {
     let tasks = e.getTasks();
     tasks.forEach((task, i) => {
       renderTasks(i, projectIndex, true);
+    });
+  });
+}
+function renderToday() {
+  rightProjectMain.innerHTML = `
+  <span id="rightProjectTitle">Your tasks due today</span>
+  `;
+
+  tasks.innerHTML = ``;
+  allProjects.forEach((e, projectIndex) => {
+    let tasks = e.getTasks();
+    tasks.forEach((task, i) => {
+      if (task.isToday() === true) renderTasks(i, projectIndex, true);
     });
   });
 }

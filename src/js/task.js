@@ -21,11 +21,16 @@ class Task {
   }
   getDate() {
     return this.date;
-
-    format(new Date(this.date), "dd/MM/yyyy");
   }
   setDate(date) {
     this.date = date;
+  }
+  isToday() {
+    let dueDate = differenceInDays(
+        new Date(this.date).setHours(0, 0, 0, 0),
+        new Date().setHours(0, 0, 0, 0)
+      );
+      if (dueDate === 0) return true
   }
   //needs to make it work to retrieve tasks and proto methods
   static of(object) {
